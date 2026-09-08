@@ -373,7 +373,7 @@
   .list{
     margin-top:1.3em;
     display:grid;
-    grid-template-columns:auto 1fr;
+    grid-template-columns:minmax(0,auto) minmax(0,1fr);
     gap:.55em .9em;
   }
   .list > div{
@@ -381,8 +381,8 @@
     border-bottom:var(--hair) solid rgba(58,147,194,.18);
   }
   .list > div:nth-last-child(-n+2){border-bottom:0;padding-bottom:0}
-  .list .h{font-weight:700;color:var(--blue);white-space:nowrap}
-  .list .v{font-weight:600;word-break:keep-all}
+  .list .h{font-weight:700;color:var(--blue);overflow-wrap:anywhere}
+  .list .v{font-weight:600;overflow-wrap:anywhere;line-height:1.6}
 
   /* 사진 카드 */
   .card{
@@ -892,11 +892,11 @@
       <p class="note">2D 등의 사유로 받지 않는 드림이 함께 기재되어 있습니다. 비공개 리스트 작성 중이며, 공개로 기재되어 있지 않더라도 배려 중입니다.</p>
 
       <div class="list">
-        <div class="h">@eung9</div><div class="v">다이브·러브·메이트·제스테·지젤·프리드·하츠</div>
-        <div class="h">@CherryMango</div><div class="v">바이브·블루·신드롬·오버로드·윈터·해일·휴고</div>
+        <div class="h">@eung9</div><div class="v">다이브·​러브·​메이트·​제스테·​지젤·​프리드·​하츠</div>
+        <div class="h">@CherryMango</div><div class="v">바이브·​블루·​신드롬·​오버로드·​윈터·​해일·​휴고</div>
         <div class="h">@meowmoon</div><div class="v">단테 로마노</div>
-        <div class="h">@Meom_Meo</div><div class="v">매그넘·파놉테스</div>
-        <div class="h">@208x195</div><div class="v">이승열·밀란</div>
+        <div class="h">@Meom_Meo</div><div class="v">매그넘·​파놉테스</div>
+        <div class="h">@208x195</div><div class="v">이승열·​밀란</div>
         <div class="h">@qwerty_</div><div class="v">4 · 8 · 9</div>
         <div class="h">@chsean</div><div class="v">사공주한</div>
         <div class="h">@ny4ngny4ng00</div><div class="v">노바</div>
