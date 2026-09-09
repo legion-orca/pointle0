@@ -1451,7 +1451,7 @@
       videoId: 'GI3otk89LVU',
       playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
       events: {
-        onReady: () => { ytReady = true; },
+        onReady: () => { ytReady = true; ytPlayer.setVolume(40); },   /* 0~100 */
         onStateChange: e => {
           if (e.data === YT.PlayerState.ENDED) ytPlayer.playVideo();   // 반복
           setBgm(e.data === YT.PlayerState.PLAYING);
