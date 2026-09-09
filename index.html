@@ -759,6 +759,47 @@
     color:var(--blue-deep);
   }
 
+  /* ── 구석 BGM 표시 ── */
+  #ytHost{position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
+  .bgm{
+    position:fixed;
+    left:20px;
+    bottom:18px;
+    z-index:30;
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    padding:0;
+    border:0;
+    background:none;
+    cursor:pointer;
+    opacity:.55;
+    transition:opacity .4s ease;
+  }
+  .bgm:hover,.bgm.on{opacity:1}
+  .eq{display:flex;align-items:flex-end;gap:2px;height:14px}
+  .eq i{
+    display:block;
+    width:2px;
+    height:14px;
+    background:var(--blue);
+    transform:scaleY(.25);
+    transform-origin:bottom;
+    transition:transform .4s ease;
+  }
+  .bgm.on .eq i{animation:eq .9s ease-in-out infinite alternate}
+  .bgm.on .eq i:nth-child(2){animation-delay:.15s}
+  .bgm.on .eq i:nth-child(3){animation-delay:.3s}
+  .bgm.on .eq i:nth-child(4){animation-delay:.45s}
+  @keyframes eq{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+  .bgm-t{
+    font-size:9.5px;
+    font-weight:600;
+    letter-spacing:.3em;
+    color:var(--blue);
+    line-height:1.4;
+  }
+
   /* ── 사진을 눌렀을 때 뜨는 작은 창 (잡고 끌어서 이동) ── */
   .viewer{
     position:fixed;
@@ -932,6 +973,12 @@
       </div>
     </div>
   </div>
+
+<button class="bgm" id="bgm" aria-label="BGM 재생/정지">
+  <span class="eq"><i></i><i></i><i></i><i></i></span>
+  <span class="bgm-t">BGM</span>
+</button>
+<div id="ytHost" aria-hidden="true"><div id="ytPlayer"></div></div>
 
 <div class="viewer" id="viewer">
   <button class="vclose" id="viewerClose" aria-label="닫기">&#215;</button>
@@ -1273,6 +1320,7 @@
     } else {
       showView(viewMain);
       setOpen(true);
+      startBgm();                     // 첫 진입 시 자동 재생
     }
   }
   photo.addEventListener('click', togglePhoto);
@@ -1318,6 +1366,20 @@
     viewer.style.top  = y + 'px';
   }
 
+  /* 좁은 화면 : 누른 사진 위에 겹쳐서 아래로 펼쳐지게 */
+  let lastThumb = null;
+  function placeOverThumb(){
+    const h = viewer.offsetHeight || 0;
+    const x = window.innerWidth / 2;
+    let y = window.innerHeight * 0.45;
+    if (lastThumb){
+      const r = lastThumb.getBoundingClientRect();
+      y = r.bottom + 6 - h / 2;      // 누른 사진 아래끝에 창 아래를 맞추고 위로 펼침
+    }
+    y = Math.min(Math.max(y, h / 2 + 10), window.innerHeight - h / 2 - 10);
+    place(x, y);
+  }
+
   function openViewer(src){
     /* 같은 사진을 다시 누르면 창을 닫음 */
     if (viewer.classList.contains('on') && viewerImg.getAttribute('src') === src){
@@ -1325,6 +1387,16 @@
       return;
     }
     viewerImg.src = src;
+
+    if (narrow()){
+      const put = () => placeOverThumb();
+      viewer.classList.add('on');
+      viewerImg.decode ? viewerImg.decode().then(put).catch(put) : put();
+      requestAnimationFrame(put);
+      setTimeout(put, 80);
+      return;
+    }
+
     if (!viewer.classList.contains('on')) place(window.innerWidth * 0.78, window.innerHeight * 0.6);
     viewer.classList.add('on');
   }
@@ -1334,6 +1406,7 @@
     const img = e.target.closest('.gal img');
     if (!img) return;
     e.stopPropagation();               // 모바일에서 뒤의 창이 닫히지 않게
+    lastThumb = img;
     openViewer(img.getAttribute('src'));
   }, true);
 
@@ -1367,6 +1440,38 @@
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
 
+  /* ── BGM : 유튜브 소리만 (화면 없음) ── */
+  const bgmBtn = document.getElementById('bgm');
+  let ytPlayer = null, ytReady = false, bgmOn = false;
+
+  window.onYouTubeIframeAPIReady = function(){
+    ytPlayer = new YT.Player('ytPlayer', {
+      height: '0',
+      width: '0',
+      videoId: 'GI3otk89LVU',
+      playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => { ytReady = true; },
+        onStateChange: e => {
+          if (e.data === YT.PlayerState.ENDED) ytPlayer.playVideo();   // 반복
+          setBgm(e.data === YT.PlayerState.PLAYING);
+        }
+      }
+    });
+  };
+
+  function setBgm(on){
+    bgmOn = on;
+    bgmBtn.classList.toggle('on', on);
+  }
+  function startBgm(){
+    if (ytReady && !bgmOn) ytPlayer.playVideo();
+  }
+  bgmBtn.addEventListener('click', () => {
+    if (!ytReady) return;
+    bgmOn ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+  });
+
   setOpen(false);   // 첫 화면 상태로 시작
 </script>
 
@@ -1391,5 +1496,6 @@
     });
   })();
 </script>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
