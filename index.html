@@ -760,7 +760,17 @@
   }
 
   /* ── 구석 BGM 표시 ── */
-  #ytHost{position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
+  #ytHost{
+    position:fixed;
+    left:0;
+    bottom:0;
+    width:120px;
+    height:68px;
+    opacity:0;
+    pointer-events:none;
+    z-index:-1;
+    overflow:hidden;
+  }
   .bgm{
     position:fixed;
     left:20px;
@@ -1082,7 +1092,7 @@
       <p class="note">2D 등의 사유로 받지 않는 드림이 함께 기재되어 있습니다. 비공개 리스트 작성 중이며, 공개로 기재되어 있지 않더라도 배려 중입니다.</p>
 
       <div class="list">
-        <div class="h">@eung9</div><div class="v">다이브·​러브·​머스탱·메이트·​제스테·​지젤·​프리드·​하츠</div>
+        <div class="h">@eung9</div><div class="v">다이브·​러브·​메이트·​제스테·​지젤·​프리드·​하츠</div>
         <div class="h">@CherryMango</div><div class="v">바이브·​블루·​신드롬·​오버로드·​윈터·​해일·​휴고</div>
         <div class="h">@meowmoon</div><div class="v">단테 로마노</div>
         <div class="h">@Meom_Meo</div><div class="v">매그넘·​파놉테스</div>
@@ -1447,14 +1457,20 @@
   const bgmBtn = document.getElementById('bgm');
   let ytPlayer = null, ytReady = false, bgmOn = false;
 
+  let wantPlay = false;
+
   window.onYouTubeIframeAPIReady = function(){
     ytPlayer = new YT.Player('ytPlayer', {
-      height: '0',
-      width: '0',
+      height: '68',
+      width: '120',
       videoId: 'GI3otk89LVU',
       playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
       events: {
-        onReady: () => { ytReady = true; ytPlayer.setVolume(40); },   /* 0~100 */
+        onReady: () => {
+          ytReady = true;
+          try { ytPlayer.setVolume(40); } catch (e) {}   /* 0~100 (iOS 는 기기 볼륨을 따름) */
+          if (wantPlay) tryPlay();
+        },
         onStateChange: e => {
           if (e.data === YT.PlayerState.ENDED) ytPlayer.playVideo();   // 반복
           setBgm(e.data === YT.PlayerState.PLAYING);
@@ -1467,12 +1483,23 @@
     bgmOn = on;
     bgmBtn.classList.toggle('on', on);
   }
-  function startBgm(){
-    if (ytReady && !bgmOn) ytPlayer.playVideo();
+  function tryPlay(){
+    if (!ytReady || bgmOn) return;
+    try { ytPlayer.playVideo(); } catch (e) {}
   }
+  function startBgm(){
+    wantPlay = true;
+    tryPlay();
+  }
+
+  /* 모바일에서 첫 시도가 막히면 다음 터치 때 다시 시도 */
+  document.addEventListener('pointerup', () => {
+    if (wantPlay && !bgmOn) tryPlay();
+  }, true);
   bgmBtn.addEventListener('click', () => {
-    if (!ytReady) return;
-    bgmOn ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    if (!ytReady) { wantPlay = true; return; }
+    if (bgmOn){ wantPlay = false; ytPlayer.pauseVideo(); }
+    else { wantPlay = true; ytPlayer.playVideo(); }
   });
 
   setOpen(false);   // 첫 화면 상태로 시작
